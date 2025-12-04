@@ -21,6 +21,18 @@ class ExpenseStorage:
         # Check if file exists to determine if we need to write headers
         file_exists = os.path.isfile(self.filepath) and os.path.getsize(self.filepath) > 0
         
+        # Handle UTF-16 encoded files
+        if file_exists:
+            # Check encoding
+            with open(self.filepath, 'rb') as f:
+                header = f.read(2)
+                if header == b'\xff\xfe':
+                    encoding = 'utf-16'
+                else:
+                    encoding = 'utf-8'
+        else:
+            encoding = 'utf-8'
+        
         # Ensure the file ends with a newline before appending
         if file_exists:
             with open(self.filepath, 'rb+') as f:
@@ -28,7 +40,7 @@ class ExpenseStorage:
                 if f.read(1) != b'\n':
                     f.write(b'\n')
         
-        with open(self.filepath, mode='a', newline='', encoding='utf-8') as file:
+        with open(self.filepath, mode='a', newline='', encoding=encoding) as file:
             writer = csv.DictWriter(file, fieldnames=['date', 'category', 'description', 'amount'])
             
             # Write header if this is a new file
@@ -44,7 +56,15 @@ class ExpenseStorage:
         if not os.path.isfile(self.filepath) or os.path.getsize(self.filepath) == 0:
             return expenses
             
-        with open(self.filepath, mode='r', encoding='utf-8') as file:
+        # Detect encoding
+        with open(self.filepath, 'rb') as f:
+            header = f.read(2)
+            if header == b'\xff\xfe':
+                encoding = 'utf-16'
+            else:
+                encoding = 'utf-8'
+            
+        with open(self.filepath, mode='r', encoding=encoding) as file:
             reader = csv.DictReader(file)
             for row in reader:
                 # Only add rows that have the required fields
