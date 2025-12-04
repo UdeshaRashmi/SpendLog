@@ -1,1 +1,3 @@
 # SpendLog Requirements
+# This project uses only built-in Python libraries
+# No external dependencies required for basic functionality
