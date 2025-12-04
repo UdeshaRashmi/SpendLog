@@ -4,7 +4,8 @@ Provides a web-based UI to add expenses, list expenses, and show total spending.
 """
 
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask_cors import CORS
 from datetime import datetime
 from spendlog.storage import ExpenseStorage
 
@@ -12,14 +13,22 @@ from spendlog.storage import ExpenseStorage
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # Set the template directory to the templates folder in the project root
 template_dir = os.path.join(os.path.dirname(current_dir), 'templates')
+# Set the static directory to the static folder in the project root
+static_dir = os.path.join(os.path.dirname(current_dir), 'static')
 
-app = Flask(__name__, template_folder=template_dir)
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+CORS(app)  # Enable CORS for all routes
 storage = ExpenseStorage()
 
 @app.route('/')
 def index():
     """Serve the main page."""
     return render_template('index.html')
+
+@app.route('/react')
+def react_index():
+    """Serve the React-style interface."""
+    return send_from_directory(static_dir, 'index.html')
 
 @app.route('/api/expenses', methods=['GET'])
 def get_expenses():

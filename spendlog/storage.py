@@ -21,6 +21,13 @@ class ExpenseStorage:
         # Check if file exists to determine if we need to write headers
         file_exists = os.path.isfile(self.filepath) and os.path.getsize(self.filepath) > 0
         
+        # Ensure the file ends with a newline before appending
+        if file_exists:
+            with open(self.filepath, 'rb+') as f:
+                f.seek(-1, 2)  # Go to the last byte
+                if f.read(1) != b'\n':
+                    f.write(b'\n')
+        
         with open(self.filepath, mode='a', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=['date', 'category', 'description', 'amount'])
             
