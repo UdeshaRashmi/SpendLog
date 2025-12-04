@@ -1,0 +1,51 @@
+"""
+Storage module for SpendLog expense tracker.
+Handles saving and loading expense data from CSV files.
+"""
+
+import csv
+import os
+from datetime import datetime
+from typing import List, Dict
+
+
+class ExpenseStorage:
+    """Handles expense data storage in CSV format."""
+    
+    def __init__(self, filepath: str = "data/expenses.csv"):
+        self.filepath = filepath
+        # Create data directory if it doesn't exist
+        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        
+    def save_expense(self, expense: Dict[str, str]) -> None:
+        """Save a single expense to the CSV file."""
+        # Check if file exists to determine if we need to write headers
+        file_exists = os.path.isfile(self.filepath)
+        
+        with open(self.filepath, mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=['date', 'category', 'description', 'amount'])
+            
+            # Write header if this is a new file
+            if not file_exists:
+                writer.writeheader()
+                
+            writer.writerow(expense)
+    
+    def load_expenses(self) -> List[Dict[str, str]]:
+        """Load all expenses from the CSV file."""
+        expenses = []
+        
+        if not os.path.isfile(self.filepath):
+            return expenses
+            
+        with open(self.filepath, mode='r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            expenses = list(reader)
+            
+        return expenses
+    
+    def get_total_spent(self) -> float:
+        """Calculate the total amount spent."""
+        expenses = self.load_expenses()
+        total = sum(float(expense['amount']) for expense in expenses)
+        return total
