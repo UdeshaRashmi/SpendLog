@@ -5,7 +5,6 @@ Handles saving and loading expense data from CSV files.
 
 import csv
 import os
-from datetime import datetime
 from typing import List, Dict
 
 
@@ -20,7 +19,7 @@ class ExpenseStorage:
     def save_expense(self, expense: Dict[str, str]) -> None:
         """Save a single expense to the CSV file."""
         # Check if file exists to determine if we need to write headers
-        file_exists = os.path.isfile(self.filepath)
+        file_exists = os.path.isfile(self.filepath) and os.path.getsize(self.filepath) > 0
         
         with open(self.filepath, mode='a', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=['date', 'category', 'description', 'amount'])
@@ -35,17 +34,26 @@ class ExpenseStorage:
         """Load all expenses from the CSV file."""
         expenses = []
         
-        if not os.path.isfile(self.filepath):
+        if not os.path.isfile(self.filepath) or os.path.getsize(self.filepath) == 0:
             return expenses
             
         with open(self.filepath, mode='r', encoding='utf-8') as file:
             reader = csv.DictReader(file)
-            expenses = list(reader)
+            for row in reader:
+                # Only add rows that have the required fields
+                if 'date' in row and 'category' in row and 'description' in row and 'amount' in row:
+                    expenses.append(row)
             
         return expenses
     
     def get_total_spent(self) -> float:
         """Calculate the total amount spent."""
         expenses = self.load_expenses()
-        total = sum(float(expense['amount']) for expense in expenses)
+        total = 0.0
+        for expense in expenses:
+            try:
+                total += float(expense['amount'])
+            except (ValueError, KeyError):
+                # Skip invalid entries
+                continue
         return total
